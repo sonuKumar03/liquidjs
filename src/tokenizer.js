@@ -4,6 +4,34 @@ const _ = require('./util/underscore.js')
 const whiteSpaceCtrl = require('./whitespace-ctrl.js')
 const assert = require('./util/assert.js')
 
+class Token {
+  constructor(type, raw, value, line, begin, end) {
+    this.type = type;
+    this.kind = type === 'tag' ? 4 : (type === 'value' ? 8 : 16); // 4 = Tag, 8 = Output, 16 = HTML
+    this.raw = raw;
+    this.value = value;
+    this.line = line;
+    this.begin = begin;
+    this.end = end;
+  }
+  getText() {
+    return this.raw;
+  }
+}
+
+class TagToken extends Token {
+  constructor(raw, value, line, begin, end, name, args, indent, trim_left, trim_right, input, file) {
+    super('tag', raw, value, line, begin, end);
+    this.name = name;
+    this.args = args;
+    this.indent = indent;
+    this.trim_left = trim_left;
+    this.trim_right = trim_right;
+    this.input = input;
+    this.file = file;
+  }
+}
+
 function parse (input, file, options) {
   assert(_.isString(input), 'illegal input')
 
@@ -29,63 +57,73 @@ function parse (input, file, options) {
 
   function parseTagToken (raw, value, pos) {
     var match = value.match(lexical.tagLine)
-    var token = {
-      type: 'tag',
-      indent: currIndent,
-      line: lineNumber.get(pos),
-      trim_left: raw.slice(0, 3) === '{%-',
-      trim_right: raw.slice(-3) === '-%}',
+    if (!match) {
+      var errToken = new Token('tag', raw, value, lineNumber.get(pos), pos, pos + raw.length);
+      errToken.input = input;
+      errToken.file = file;
+      throw new TokenizationError(`illegal tag syntax`, errToken)
+    }
+    var name = match[1];
+    var args = match[2];
+    return new TagToken(
       raw,
       value,
+      lineNumber.get(pos),
+      pos,
+      pos + raw.length,
+      name,
+      args,
+      currIndent,
+      raw.slice(0, 3) === '{%-',
+      raw.slice(-3) === '-%}',
       input,
       file
-    }
-    if (!match) {
-      throw new TokenizationError(`illegal tag syntax`, token)
-    }
-    token.name = match[1]
-    token.args = match[2]
-    return token
+    );
   }
 
   function parseValueToken (raw, value, pos) {
-    return {
-      type: 'value',
-      line: lineNumber.get(pos),
-      trim_left: raw.slice(0, 3) === '{{-',
-      trim_right: raw.slice(-3) === '-}}',
+    var token = new Token(
+      'value',
       raw,
       value,
-      input,
-      file
-    }
+      lineNumber.get(pos),
+      pos,
+      pos + raw.length
+    );
+    token.trim_left = raw.slice(0, 3) === '{{-';
+    token.trim_right = raw.slice(-3) === '-}}';
+    token.input = input;
+    token.file = file;
+    return token;
   }
 
   function parseHTMLToken (begin, end) {
     var htmlFragment = input.slice(begin, end)
     currIndent = _.last((htmlFragment).split('\n')).length
 
-    return {
-      type: 'html',
-      raw: htmlFragment,
-      value: htmlFragment
-    }
+    var token = new Token(
+      'html',
+      htmlFragment,
+      htmlFragment,
+      lineNumber.get(begin),
+      begin,
+      end
+    );
+    token.input = input;
+    token.file = file;
+    return token;
   }
 }
 
 function LineNumber (html) {
-  var parsedLinesCount = 0
-  var lastMatchBegin = -1
-
   return {
     get: function (pos) {
-      var lines = html.slice(lastMatchBegin + 1, pos).split('\n')
-      parsedLinesCount += lines.length - 1
-      lastMatchBegin = pos
-      return parsedLinesCount + 1
+      return html.slice(0, pos).split('\n').length
     }
   }
 }
 
 exports.parse = parse
 exports.whiteSpaceCtrl = whiteSpaceCtrl
+exports.Token = Token
+exports.TagToken = TagToken

@@ -99,6 +99,7 @@ module.exports = function (Tag, Filter) {
   return {
     parse,
     parseTag,
+    parseToken,
     parseStream,
     parseValue
   }
