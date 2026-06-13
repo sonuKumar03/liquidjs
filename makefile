@@ -11,7 +11,7 @@ dist:
 		--ignore path \
 		-t [ babelify --global true --presets [ es2015 ] ] \
 		> dist/liquid.js
-	$(MINIFY) dist/liquid.js --compress warnings=false --mangle --output dist/liquid.min.js
+	$(MINIFY) dist/liquid.js --compress --mangle --output dist/liquid.min.js
 	ls -lh dist/
 
 clean: 

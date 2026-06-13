@@ -33,7 +33,7 @@ module.exports = function (liquid) {
         try {
           await liquid.renderer.renderTemplates(this.templates, context);
           const finalResult = context.get("$$answer");
-          table[i] = { ...row, [this.columnName]: finalResult };
+          table[i] = Object.assign({}, row, { [this.columnName]: finalResult });
         } catch (err) {
           throw err;
         } finally {
