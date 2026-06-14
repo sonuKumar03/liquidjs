@@ -1,19 +1,28 @@
-# liquidjs
-[![npm version](https://img.shields.io/npm/v/liquidjs.svg?logo=npm&style=flat-square)](https://www.npmjs.org/package/liquidjs)
-[![npm downloads](https://img.shields.io/npm/dm/liquidjs.svg?style=flat-square)](https://www.npmjs.org/package/liquidjs)
-[![Coverage](https://img.shields.io/coveralls/harttle/liquidjs.svg?style=flat-square)](https://coveralls.io/github/harttle/liquidjs?branch=master)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/harttle/liquidjs/ci-build.yml?branch=master&style=flat-square)](https://github.com/harttle/liquidjs/actions/workflows/ci-build.yml?query=branch%3Amaster)
-[![DUB license](https://img.shields.io/dub/l/vibe-d.svg?style=flat-square)](https://github.com/harttle/liquidjs/blob/master/LICENSE)
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/harttle/liquidjs)
+# liquidjs (SpotDraft Fork)
 
-A simple, expressive and safe [Shopify][shopify/liquid] / GitHub Pages compatible template engine in pure JavaScript.
-**The purpose of this repo** is to provide a standard Liquid implementation for the JavaScript community so that [Jekyll sites](https://jekyllrb.com), [GitHub Pages](https://pages.github.com/) and [Shopify templates](https://themes.shopify.com/) can be ported to Node.js without pain.
+This is SpotDraft's customized fork of **[LiquidJS](https://github.com/harttle/liquidjs)**, migrated to **LiquidJS 10.27.0**.
 
-* [Documentation][doc]
-* Please star [LiquidJS on GitHub][github]!
-* Financial support via [GitHub Sponsors](https://github.com/sponsors/harttle).
+The fork prioritizes static analysis, JSON validation, and type-aware arithmetic, serving as the foundation for the SpotDraft Liquid Language Server (LSP).
 
-<p align="center"><a href="https://liquidjs.com"><img height="155px" width="155px" src="https://liquidjs.com/icon/mstile-310x310.png" alt="logo"></a></p>
+---
+
+## Custom SpotDraft Features
+
+### 1. Type-Aware Arithmetic and Comparison
+- Preserves SpotDraft's custom typed operations (currency, duration, object, scalar arithmetic).
+- Safe timezone and date comparisons and duration logic without requiring Moment.js.
+- Extends operators like `==`, `!=`, `<`, `>`, `<=`, `>=` to support matching currencies, phone numbers, and durations.
+
+### 2. Custom Tags & Filters
+- **Tags**: `parseAssign` (JSON assignment), `assignVar` (dynamic variable resolution), and `computeColumn` (row-isolated table calculations with `self` and `$$answer`).
+- **Filters**: `toCurrency`, `toDuration`, `sumArray`, `updateAttribute`, `updateTypeAttribute`, and overrides for `plus`, `minus`, `times`, and `divided_by`.
+
+### 3. Static Analysis & Validations
+- Dependency graph extraction (`createDependencyTree`, `getAffectedVariables`, `getAssignedVariables`).
+- Branch-aware use-before-assignment checking.
+- Syntax checking for `parseAssign` JSON values and `computeColumn` `$$answer` assignment checks.
+- Backwards compatible root-level entry points (`dependency-graph.js` and `validations.js`).
+
 
 ## What's it like?
 
