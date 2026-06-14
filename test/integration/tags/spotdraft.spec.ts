@@ -23,6 +23,15 @@ describe('SpotDraft tags', () => {
       .resolves.toEqual([1, 2, 3])
   })
 
+  it('assignVar resolves a string variable name from the context', async () => {
+    await expect(new Liquid().parseAndRender('{% assignVar result="source" %}{{ result }}', { source: 'bar' }))
+      .resolves.toBe('bar')
+  })
+
+  it('assignVar rejects an illegal assignment expression', async () => {
+    await expect(new Liquid().parseAndRender('{% assignVar / %}')).rejects.toThrow()
+  })
+
   it('computeColumn computes each row and isolates temporary assignments', async () => {
     const liquid = new Liquid()
     const context = { dynamicTable: [{ col1: 2, col2: 3 }, { col1: 1, col2: 4 }], someOtherVariable: 10 }
