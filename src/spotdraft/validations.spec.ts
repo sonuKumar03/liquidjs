@@ -70,6 +70,53 @@ describe('SpotDraft validation compatibility', () => {
     expect(checkVariableAssignedBeforeUsed(liquid, source)).toEqual([])
   })
 
+  test.each([
+    [
+      'top-level assignment',
+      '{% assign result = unknownVar | plus: 10 %}',
+      ['Variable "unknownVar" used before assignment in expression "result = unknownVar | plus: 10" on line 1']
+    ],
+    [
+      'if branch',
+      '{% if condition %}{% assign result = missing %}{% endif %}',
+      ['Variable "missing" used before assignment in expression "result = missing" on line 1']
+    ],
+    [
+      'else branch',
+      '{% if condition %}{% assign result = 10 %}{% else %}{% assign result = missing | times: 2 %}{% endif %}',
+      ['Variable "missing" used before assignment in expression "result = missing | times: 2" on line 1']
+    ],
+    [
+      'nested if without prior assignment',
+      '{% if outer %}{% if inner %}{% assign result = missing | times: 2 %}{% endif %}{% endif %}',
+      ['Variable "missing" used before assignment in expression "result = missing | times: 2" on line 1']
+    ],
+    [
+      'nested for without prior assignment',
+      '{% for x in items %}{% for y in items %}{% assign result = missing | times: 2 %}{% endfor %}{% endfor %}',
+      ['Variable "missing" used before assignment in expression "result = missing | times: 2" on line 1']
+    ]
+  ])('reports variables used before assignment in a %s', (_name, source, expected) => {
+    expect(checkVariableAssignedBeforeUsed(liquid, source)).toEqual(expected)
+  })
+
+  test.each([
+    [
+      'parseAssign in an outer if',
+      '{% if outer %}{% parseAssign safe = 10 %}{% if inner %}{% assign result = safe | times: 2 %}{% endif %}{% endif %}'
+    ],
+    [
+      'assign in an outer if',
+      '{% if outer %}{% assign safe = 2 %}{% if inner %}{% assign result = safe | times: 2 %}{% endif %}{% endif %}'
+    ],
+    [
+      'assign in an outer for loop',
+      '{% for x in items %}{% assign safe = 2 %}{% for y in items %}{% assign result = safe | times: 2 %}{% endfor %}{% endfor %}'
+    ]
+  ])('accepts variables established by %s', (_name, source) => {
+    expect(checkVariableAssignedBeforeUsed(liquid, source)).toEqual([])
+  })
+
   it('requires a top-level $$answer assignment in computeColumn', () => {
     const invalid = `{% computeColumn table result %}{% if yes %}{% assign $$answer = 1 %}{% endif %}{% endcomputeColumn %}`
     expect(checkAtleastOneDynamicTableAssignPresent(liquid, invalid)).toEqual([{
