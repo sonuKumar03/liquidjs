@@ -17,6 +17,10 @@ describe('SpotDraft tags', () => {
     await expect(new Liquid().parseAndRender("{% parseAssign value='{prop: 123}' %}")).rejects.toThrow()
   })
 
+  it('parseAssign rejects an illegal assignment expression', async () => {
+    await expect(new Liquid().parseAndRender('{% parseAssign / %}')).rejects.toThrow()
+  })
+
   it('assignVar assigns the value referenced by a variable name', async () => {
     const liquid = new Liquid({ keepOutputType: true })
     await expect(liquid.parseAndRender('{% assignVar result="source" %}{{ result }}', { source: [1, 2, 3] }))
