@@ -11,6 +11,18 @@ export abstract class Token {
   public getText () {
     return this.input.slice(this.begin, this.end)
   }
+  public get raw () {
+    return this.getText()
+  }
+  public get line () {
+    return this.getPosition()[0]
+  }
+  public get type () {
+    if (this.kind === TokenKind.Tag) return 'tag'
+    if (this.kind === TokenKind.Output) return 'value'
+    if (this.kind === TokenKind.HTML) return 'html'
+    return 'token'
+  }
   public getPosition () {
     let [row, col] = [1, 1]
     for (let i = 0; i < this.begin; i++) {

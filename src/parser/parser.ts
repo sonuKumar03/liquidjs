@@ -2,7 +2,7 @@ import { Limiter, toPromise, assert, isTagToken, isOutputToken, ParseError, toLi
 import { Tokenizer } from './tokenizer'
 import { ParseStream } from './parse-stream'
 import { TopLevelToken, OutputToken } from '../tokens'
-import { Template, Output, HTML } from '../template'
+import { Template, Output, HTML, Value } from '../template'
 import { LiquidCache } from '../cache'
 import { FS, Loader, LookupType } from '../fs'
 import { LiquidError, LiquidErrors } from '../util/error'
@@ -51,6 +51,10 @@ export class Parser {
     }
     if (errors.length) throw new LiquidErrors(errors)
     return templates
+  }
+  /** Compatibility helper retained for parser-driven LSP consumers. */
+  public parseValue (value: string): Value {
+    return new Value(value, this.liquid)
   }
   public parseToken (token: TopLevelToken, remainTokens: TopLevelToken[]) {
     try {

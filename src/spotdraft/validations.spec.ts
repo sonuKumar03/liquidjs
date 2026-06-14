@@ -10,6 +10,10 @@ describe('SpotDraft validation compatibility', () => {
     expect(errors[0].expression).toContain('parseAssign invalid')
   })
 
+  it('exposes JSON validation on Liquid instances', () => {
+    expect(liquid.checkValidJSON('{% parseAssign invalid = unquoted %}')).toHaveLength(1)
+  })
+
   it('reports variables used before assignment', () => {
     expect(checkVariableAssignedBeforeUsed(liquid, `{% assign result = unknownVar | plus: 10 %}`))
       .toEqual(['Variable "unknownVar" used before assignment in expression "result = unknownVar | plus: 10" on line 1'])

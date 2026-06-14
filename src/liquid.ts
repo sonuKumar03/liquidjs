@@ -7,6 +7,7 @@ import { Parser } from './parser'
 import { tags } from './tags'
 import { filters } from './filters'
 import { LiquidOptions, normalizeDirectoryList, NormalizedFullOptions, normalize, RenderOptions, RenderFileOptions } from './liquid-options'
+import { checkValidJSON, JsonValidationError } from './spotdraft/validations'
 
 export class Liquid {
   public readonly options: NormalizedFullOptions
@@ -96,6 +97,10 @@ export class Liquid {
   }
   public evalValueSync (str: string, scope?: object | Context): any {
     return toValueSync(this._evalValue(str, scope))
+  }
+
+  public checkValidJSON (expression: string): JsonValidationError[] {
+    return checkValidJSON(this, expression)
   }
 
   public registerFilter (name: string, filter: FilterImplOptions) {

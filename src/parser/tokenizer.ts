@@ -15,14 +15,22 @@ export class Tokenizer {
 
   constructor (
     public input: string,
-    operators: Operators = defaultOptions.operators,
+    operators: Operators | NormalizedFullOptions = defaultOptions.operators,
     public file?: string,
     range?: [number, number]
   ) {
     this.p = range ? range[0] : 0
     this.N = range ? range[1] : input.length
-    this.opTrie = createTrie(operators)
+    const optionOperators = (operators as NormalizedFullOptions).operators
+    const operatorMap = optionOperators && typeof optionOperators === 'object'
+      ? optionOperators
+      : operators as Operators
+    this.opTrie = createTrie(operatorMap)
     this.literalTrie = createTrie(literalValues)
+  }
+
+  public get text (): string {
+    return this.input
   }
 
   readExpression () {
