@@ -51,6 +51,10 @@
   "files": [
     "bin/liquid.js",
     "dist",
+    "dependency-graph.js",
+    "dependency-graph.d.ts",
+    "validations.js",
+    "validations.d.ts",
     "LICENSE",
     "README.md"
   ],

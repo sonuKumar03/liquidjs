@@ -1,3 +1,5 @@
 export * from './computation'
 export * from './operators'
 export * from './types'
+export * from './dependency-graph'
+export * from './validations'

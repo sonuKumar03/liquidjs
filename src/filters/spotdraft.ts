@@ -1,4 +1,4 @@
-import { performOperation, sumArray as sum, toCurrency as currency, toDuration as duration, updateAttribute as update } from '../spotdraft'
+import { performOperation, sumArray as sum, toCurrency as currency, toDuration as duration, updateAttribute as update } from '../spotdraft/computation'
 
 export const plus = (lhs: unknown, rhs: unknown) => performOperation(lhs, rhs, 'ADD')
 export const minus = (lhs: unknown, rhs: unknown) => performOperation(lhs, rhs, 'SUBTRACT')

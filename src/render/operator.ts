@@ -3,7 +3,7 @@ import { Context } from '../context'
 import { toValue } from '../util'
 import { isFalsy, isTruthy } from '../render/boolean'
 import { isArray, isFunction } from '../util/underscore'
-import { spotDraftCompare, spotDraftEquals } from '../spotdraft'
+import { spotDraftCompare, spotDraftEquals } from '../spotdraft/operators'
 
 export type UnaryOperatorHandler = (operand: any, ctx: Context) => boolean;
 export type BinaryOperatorHandler = (lhs: any, rhs: any, ctx: Context) => boolean;

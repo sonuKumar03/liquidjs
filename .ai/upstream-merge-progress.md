@@ -13,9 +13,9 @@
 | DONE | Port typed computation and comparison behavior | CommonForm currency/duration/date arithmetic, null/object handling, precision, and custom comparisons ported to TypeScript |
 | DONE | Port custom filters | `toCurrency`, `toDuration`, `sumArray`, `updateAttribute`, `updateTypeAttribute`, and arithmetic overrides registered by default |
 | DONE | Port custom tags | `parseAssign`, `assignVar`, and `computeColumn` ported as upstream tag classes with AST hooks and isolated row contexts |
-| IN_PROGRESS | Port dependency/static-analysis APIs | Assignment extraction, dependency graph, affected/assigned variables, and cycle detection |
-| TODO | Port validations | JSON validation, use-before-assignment, and `computeColumn`/`$$answer` validation |
-| TODO | Preserve LSP-facing parser/tokenizer API | Verify whether upstream exports can replace the fork's `Tokenizer`, token kinds, parser access, lexical helpers, and evaluation helpers |
+| DONE | Port dependency/static-analysis APIs | Assignment extraction, dependency graph, affected/assigned variables, and cycle detection ported using upstream AST hooks |
+| DONE | Port validations | JSON validation, use-before-assignment, and `computeColumn`/`$$answer` validation ported |
+| IN_PROGRESS | Preserve LSP-facing parser/tokenizer API | Upstream exports tokenizer, token kinds, parser, tokens, errors, expression helpers, and analysis; legacy `Parser.parseValue` compatibility remains |
 | TODO | Add focused compatibility tests | Port legacy tests to upstream test architecture and add regression cases for migration decisions |
 | TODO | Run full validation | Typecheck, lint, unit tests, build, and focused compatibility suite |
 | TODO | Produce final migration report | Summarize adopted upstream improvements, preserved behavior, risks, and readiness |
@@ -86,3 +86,4 @@
 - 2026-06-15: Recorded `upstream/master` as merge ancestry and adopted its TypeScript source tree as the migration baseline.
 - 2026-06-15: Typed computation/filter slice passes typecheck, focused lint, build, and all 1,557 upstream/fork tests currently present.
 - 2026-06-15: Custom tags and `$$answer` identifier support pass build, lint, and all 1,562 tests.
+- 2026-06-15: Dependency graph, validation APIs, and historical CommonJS subpaths pass build, lint, shim smoke tests, and all 1,568 tests.
