@@ -51,6 +51,7 @@ Shopify layout/render compatibility changes were accepted as part of the upstrea
 - Top-level `$$answer` validation for `computeColumn`.
 - Historical `liquidjs/dependency-graph` and `liquidjs/validations` CommonJS/type subpaths.
 - `Liquid#checkValidJSON` instance compatibility.
+- Malformed `parseAssign` validation reports all invalid assignments even when the upstream parser would reject the template early.
 
 ### LSP Surface
 
@@ -68,6 +69,8 @@ Shopify layout/render compatibility changes were accepted as part of the upstrea
 - `npx tsc --noEmit`
 - `npm pack --dry-run --json`
 - CommonJS subpath smoke test for `dependency-graph.js` and `validations.js`
+
+Final verification passed 99 Jest suites and 1,790 tests. Legacy SpotDraft coverage was migrated for type detection, custom operators, arithmetic, constructor/update/sum filters, custom tags, dependency analysis, JSON validation, variable scope validation, and `computeColumn` answer validation.
 
 ## Remaining Risks
 

@@ -17,6 +17,7 @@
 | DONE | Port validations | JSON validation, use-before-assignment, and `computeColumn`/`$$answer` validation ported |
 | DONE | Preserve LSP-facing parser/tokenizer API | Upstream exports retained; `Parser.parseValue`, full-options `Tokenizer`, and legacy token metadata compatibility added |
 | DONE | Add focused compatibility tests | Computation, operators, filters, tags, dependency graph, validations, subpaths, and LSP helpers covered |
+| DONE | Migrate legacy SpotDraft regression coverage | Type assertions, operators, arithmetic, constructors, updates, sums, tags, dependency graph, and all validation categories migrated or confirmed equivalent |
 | DONE | Run full validation | Typecheck, lint, unit tests, build, package dry run, and CommonJS shim smoke tests pass |
 | DONE | Produce final migration report | See `.ai/upstream-merge-report.md` |
 
@@ -69,13 +70,13 @@
 
 1. Use current upstream as the source architecture because the parser, tokenizer, context, security limits, and TypeScript API have been substantially redesigned.
 2. Port business behavior as isolated extensions and compatibility exports instead of retaining legacy core files.
-3. Keep validation and dependency analysis parser-based; do not reduce them to regex-only source scanning.
+3. Keep dependency and scope analysis parser-based. Scan `parseAssign` tag bodies for JSON validation because malformed legacy syntax cannot be represented by the upstream AST.
 4. Preserve custom behavior even where upstream has similarly named filters or tags until compatibility tests prove equivalence.
 
 ## Remaining Risks
 
 - Upstream's expression and template AST shapes differ substantially from the legacy parser templates.
-- Some legacy behavior is encoded only in tests and commit history, especially null/default arithmetic semantics.
+- Legacy null/default arithmetic semantics are now covered by focused regression tests, but production data may contain combinations absent from the historical fixtures.
 - The LSP consumer may depend on undocumented parser/token fields beyond the published declarations.
 - `computeColumn` mutates table data and scope; upstream `Context` isolation semantics must be tested carefully.
 
@@ -88,3 +89,4 @@
 - 2026-06-15: Custom tags and `$$answer` identifier support pass build, lint, and all 1,562 tests.
 - 2026-06-15: Dependency graph, validation APIs, and historical CommonJS subpaths pass build, lint, shim smoke tests, and all 1,568 tests.
 - 2026-06-15: LSP compatibility helpers, package contents, and `Liquid#checkValidJSON` validated; migration is ready for review.
+- 2026-06-15: Legacy SpotDraft regression coverage migrated in one-purpose commits; build, 99 Jest suites/1,790 tests, lint, package dry run, and CommonJS subpath smoke tests pass.
