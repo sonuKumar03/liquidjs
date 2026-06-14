@@ -19,6 +19,9 @@ import ContinueTag from './continue'
 import EchoTag from './echo'
 import LiquidTag from './liquid'
 import InlineCommentTag from './inline-comment'
+import ParseAssignTag from './parse-assign'
+import AssignVarTag from './assign-var'
+import ComputeColumnTag from './compute-column'
 import type { TagClass } from '../template/tag'
 
 export const tags: Record<string, TagClass> = {
@@ -42,7 +45,10 @@ export const tags: Record<string, TagClass> = {
   'continue': ContinueTag,
   echo: EchoTag,
   liquid: LiquidTag,
-  '#': InlineCommentTag
+  '#': InlineCommentTag,
+  parseAssign: ParseAssignTag,
+  assignVar: AssignVarTag,
+  computeColumn: ComputeColumnTag
 }
 
-export { AssignTag, ForTag, CaptureTag, CaseTag, CommentTag, IncludeTag, RenderTag, DecrementTag, IncrementTag, CycleTag, IfTag, LayoutTag, BlockTag, RawTag, TablerowTag, UnlessTag, BreakTag, ContinueTag, EchoTag, LiquidTag, InlineCommentTag }
+export { AssignTag, ForTag, CaptureTag, CaseTag, CommentTag, IncludeTag, RenderTag, DecrementTag, IncrementTag, CycleTag, IfTag, LayoutTag, BlockTag, RawTag, TablerowTag, UnlessTag, BreakTag, ContinueTag, EchoTag, LiquidTag, InlineCommentTag, ParseAssignTag, AssignVarTag, ComputeColumnTag }

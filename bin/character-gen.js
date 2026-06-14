@@ -4,7 +4,7 @@ const isQuote = c => c === '"' || c === "'"
 const isOperator = c => '!=<>'.includes(c)
 const isNumber = c => c >= '0' && c <= '9'
 const isCharacter = c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-const isWord = c => '_-?'.includes(c) || isCharacter(c) || isNumber(c)
+const isWord = c => '_-?$'.includes(c) || isCharacter(c) || isNumber(c)
 const isBlank = c => '\n\t \r\v\f'.includes(c)
 const isInlineBlank = c => c === '\t' || c === ' ' || c === '\r'
 const isSign = c => c === '-' || c === '+'
