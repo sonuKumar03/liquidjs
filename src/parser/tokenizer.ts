@@ -5,6 +5,7 @@ import { Operators, Expression } from '../render'
 import { NormalizedFullOptions, defaultOptions } from '../liquid-options'
 import { FilterArg } from './filter-arg'
 import { whiteSpaceCtrl } from './whitespace-ctrl'
+import { isPropertyAccessToken, isRangeToken, isTagToken, isOutputToken } from '../util/type-guards'
 
 export class Tokenizer {
   p: number
@@ -466,3 +467,115 @@ export class Tokenizer {
     while (this.peekType() & BLANK) ++this.p
   }
 }
+
+function collectValueTokenSubTokens (token: Token, list: Token[]) {
+  list.push(token)
+  if (isPropertyAccessToken(token)) {
+    if (token.variable) collectValueTokenSubTokens(token.variable, list)
+    for (const prop of token.props) {
+      collectValueTokenSubTokens(prop, list)
+    }
+  } else if (isRangeToken(token)) {
+    collectValueTokenSubTokens(token.lhs, list)
+    collectValueTokenSubTokens(token.rhs, list)
+  }
+}
+
+function tokenizeTagArgs (token: TagToken, operators: Operators): Token[] {
+  const argsBegin = token.contentRange[1] - token.args.length
+  const tokenizer = new Tokenizer(token.input, operators, token.file, [argsBegin, token.contentRange[1]])
+  const tokens: Token[] = []
+  while (!tokenizer.end()) {
+    tokenizer.skipBlank()
+    if (tokenizer.end()) break
+
+    const op = tokenizer.readOperator()
+    if (op) {
+      tokens.push(op)
+      continue
+    }
+
+    const hash = tokenizer.readHash()
+    if (hash) {
+      if (hash.name) tokens.push(hash.name)
+      if (hash.value) collectValueTokenSubTokens(hash.value, tokens)
+      continue
+    }
+
+    if (tokenizer.peek() === '|') {
+      tokenizer.p++
+      const name = tokenizer.readIdentifier()
+      if (name.size()) tokens.push(name)
+      continue
+    }
+
+    const val = tokenizer.readValue()
+    if (val) {
+      collectValueTokenSubTokens(val, tokens)
+      continue
+    }
+
+    tokenizer.p++
+  }
+  return tokens
+}
+
+function tokenizeOutputToken (token: OutputToken, operators: Operators): Token[] {
+  const tokenizer = new Tokenizer(token.input, operators, token.file, token.contentRange)
+  const tokens: Token[] = []
+  try {
+    const filteredValue = tokenizer.readFilteredValue()
+    if (filteredValue.initial) {
+      for (const t of filteredValue.initial.postfix) {
+        collectValueTokenSubTokens(t, tokens)
+      }
+    }
+    for (const filter of filteredValue.filters) {
+      const nameToken = new IdentifierToken(token.input, filter.begin, filter.begin + filter.name.length, token.file)
+      tokens.push(nameToken)
+      for (const arg of filter.args) {
+        if (Array.isArray(arg)) {
+          if (arg[1]) collectValueTokenSubTokens(arg[1], tokens)
+        } else if (arg) {
+          collectValueTokenSubTokens(arg, tokens)
+        }
+      }
+    }
+  } catch (_) {}
+  return tokens
+}
+
+export function getTokenAtPosition (
+  tokens: TopLevelToken[],
+  position: number,
+  operators: Operators = defaultOptions.operators
+): Token | undefined {
+  for (const token of tokens) {
+    if (position >= token.begin && position <= token.end) {
+      if (isTagToken(token)) {
+        const tagNameToken = new IdentifierToken(token.input, token.begin + 2, token.begin + 2 + token.name.length, token.file)
+        if (position >= tagNameToken.begin && position <= tagNameToken.end) {
+          return tagNameToken
+        }
+        const subTokens = tokenizeTagArgs(token, operators)
+        for (const sub of subTokens) {
+          if (position >= sub.begin && position <= sub.end) {
+            return sub
+          }
+        }
+        return token
+      } else if (isOutputToken(token)) {
+        const subTokens = tokenizeOutputToken(token, operators)
+        for (const sub of subTokens) {
+          if (position >= sub.begin && position <= sub.end) {
+            return sub
+          }
+        }
+        return token
+      }
+      return token
+    }
+  }
+  return undefined
+}
+

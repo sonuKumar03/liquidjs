@@ -10,9 +10,13 @@ export { defaultOperators, Operators, evalToken, evalQuotedToken, Expression, is
 export { Context, Scope } from './context'
 export { Value, Hash, Template, FilterImplOptions, Tag, Filter, Output, Variable, VariableLocation, VariableSegments, Variables, StaticAnalysis, StaticAnalysisOptions, analyze, analyzeSync, Arguments, PartialScope } from './template'
 export type { TagRenderReturn } from './template'
-export { Token, TopLevelToken, TagToken, ValueToken } from './tokens'
-export type { RangeToken, LiteralToken, QuotedToken, PropertyAccessToken, NumberToken } from './tokens'
-export { TokenKind, Tokenizer, ParseStream, Parser } from './parser'
+export {
+  Token, TopLevelToken, TagToken, ValueToken, HTMLToken, NumberToken,
+  IdentifierToken, LiteralToken, OperatorToken, PropertyAccessToken,
+  FilterToken, HashToken, QuotedToken, RangeToken, LiquidTagToken,
+  DelimitedToken, FilteredValueToken
+} from './tokens'
+export { TokenKind, Tokenizer, ParseStream, Parser, getTokenAtPosition } from './parser'
 export { filters } from './filters'
 export * from './tags'
 export { defaultOptions } from './liquid-options'
