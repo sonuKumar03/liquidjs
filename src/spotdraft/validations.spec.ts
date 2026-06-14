@@ -118,12 +118,28 @@ describe('SpotDraft validation compatibility', () => {
   })
 
   it('requires a top-level $$answer assignment in computeColumn', () => {
-    const invalid = `{% computeColumn table result %}{% if yes %}{% assign $$answer = 1 %}{% endif %}{% endcomputeColumn %}`
+    const invalid = `{% computeColumn table result %}
+      {% if yes %}{% assign $$answer = 1 %}{% endif %}
+      {% for item in items %}{% assign $$answer = item %}{% endfor %}
+      {% unless hidden %}{% assign $$answer = 2 %}{% endunless %}
+    {% endcomputeColumn %}`
     expect(checkAtleastOneDynamicTableAssignPresent(liquid, invalid)).toEqual([{
       message: '$$answer is not assigned outside any loops or condition block',
       metadata: { tableName: 'table', columnName: 'result' }
     }])
-    const valid = `{% computeColumn table result %}{% assign $$answer = 1 %}{% endcomputeColumn %}`
-    expect(checkAtleastOneDynamicTableAssignPresent(liquid, valid)).toEqual([])
+
+    const answerBeforeBlocks = `{% computeColumn table result %}
+      {% assign $$answer = 1 %}
+      {% if yes %}{% assign temporary = 2 %}{% endif %}
+      {% for item in items %}{% assign temporary = item %}{% endfor %}
+    {% endcomputeColumn %}`
+    expect(checkAtleastOneDynamicTableAssignPresent(liquid, answerBeforeBlocks)).toEqual([])
+
+    const answerAfterBlocks = `{% computeColumn table result %}
+      {% if yes %}{% assign temporary = 2 %}{% endif %}
+      {% for item in items %}{% assign temporary = item %}{% endfor %}
+      {% assign $$answer = 1 %}
+    {% endcomputeColumn %}`
+    expect(checkAtleastOneDynamicTableAssignPresent(liquid, answerAfterBlocks)).toEqual([])
   })
 })
