@@ -14,6 +14,52 @@ describe('SpotDraft validation compatibility', () => {
     expect(liquid.checkValidJSON('{% parseAssign invalid = unquoted %}')).toHaveLength(1)
   })
 
+  it('accepts JSON scalar, array, and object literals inside control flow', () => {
+    const source = `
+      {% unless a == "EUR" %}
+        {% parseAssign text = "test" %}
+      {% endunless %}
+      {% parseAssign object = '{"key": "value"}' %}
+      {% parseAssign number = "100" %}
+      {% if a == "USD" %}
+        {% parseAssign nestedText = "test" %}
+      {% elsif a == "INR" %}
+        {% parseAssign array = "[1, 2, 3]" %}
+      {% else %}
+        {% parseAssign boolean = "true" %}
+      {% endif %}`
+    expect(checkValidJSON(liquid, source)).toEqual([])
+  })
+
+  it('reports every invalid parseAssign value with its expression and line', () => {
+    const source = `
+      {% parseAssign tuple = 10, 0 %}
+      {% parseAssign computed = a | plus: b %}
+      {% if a == "INR" %}
+        {% parseAssign trailingComma = [1, 2,] %}
+      {% else %}
+        {% parseAssign unquoted = unquotedString %}
+      {% endif %}`
+    expect(checkValidJSON(liquid, source)).toEqual([
+      {
+        expression: 'parseAssign tuple =  10, 0',
+        errorMessage: 'Invalid value assigned to parseAssign statement at line 2'
+      },
+      {
+        expression: 'parseAssign computed =  a | plus: b',
+        errorMessage: 'Invalid value assigned to parseAssign statement at line 3'
+      },
+      {
+        expression: 'parseAssign trailingComma =  [1, 2,]',
+        errorMessage: 'Invalid value assigned to parseAssign statement at line 5'
+      },
+      {
+        expression: 'parseAssign unquoted =  unquotedString',
+        errorMessage: 'Invalid value assigned to parseAssign statement at line 7'
+      }
+    ])
+  })
+
   it('reports variables used before assignment', () => {
     expect(checkVariableAssignedBeforeUsed(liquid, `{% assign result = unknownVar | plus: 10 %}`))
       .toEqual(['Variable "unknownVar" used before assignment in expression "result = unknownVar | plus: 10" on line 1'])

@@ -19,28 +19,22 @@ function isLiteral (value: string): boolean {
 
 export function checkValidJSON (engine: Liquid, expression: string): JsonValidationError[] {
   const errors: JsonValidationError[] = []
-  function visit (templates: Template[]) {
-    for (const template of templates) {
-      const token = getTagToken(template)
-      if (!token) continue
-      if (token.name === 'parseAssign') {
-        const parts = getAssignmentParts(template)
-        if (!parts) continue
-        try {
-          if (!isLiteral(parts.rhs)) throw new Error('Invalid value assigned to parseAssign statement')
-          const value = engine.evalValueSync(parts.rhs, {})
-          JSON.parse(`{"value": ${typeof value === 'string' ? JSON.stringify(value) : String(value)}}`)
-        } catch (error) {
-          const [line] = token.getPosition()
-          errors.push({
-            expression: `${token.name} ${parts.defined} = ${token.args.slice(token.args.indexOf('=') + 1)}`,
-            errorMessage: `${(error as Error).message} at line ${line}`
-          })
-        }
-      } else if (['if', 'unless', 'for'].includes(token.name)) visit(getTemplateChildren(template))
+  const tagPattern = /{%-?\s*parseAssign\s+([A-Za-z_$][\w$]*)\s*=\s*([\s\S]*?)-?%}/g
+  for (const match of expression.matchAll(tagPattern)) {
+    const [, defined, capturedValue] = match
+    const rhs = capturedValue.trim()
+    try {
+      if (!isLiteral(rhs)) throw new Error('Invalid value assigned to parseAssign statement')
+      const value = engine.evalValueSync(rhs, {})
+      JSON.parse(`{"value": ${typeof value === 'string' ? JSON.stringify(value) : String(value)}}`)
+    } catch (error) {
+      const line = expression.slice(0, match.index).split('\n').length
+      errors.push({
+        expression: `parseAssign ${defined} =  ${rhs}`,
+        errorMessage: `${(error as Error).message} at line ${line}`
+      })
     }
   }
-  visit(getTemplates(expression, engine))
   return errors
 }
 
