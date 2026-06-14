@@ -3,6 +3,7 @@ import { Context } from '../context'
 import { toValue } from '../util'
 import { isFalsy, isTruthy } from '../render/boolean'
 import { isArray, isFunction } from '../util/underscore'
+import { spotDraftCompare, spotDraftEquals } from '../spotdraft'
 
 export type UnaryOperatorHandler = (operand: any, ctx: Context) => boolean;
 export type BinaryOperatorHandler = (lhs: any, rhs: any, ctx: Context) => boolean;
@@ -15,22 +16,22 @@ export const defaultOperators: Operators = {
   '>': (l: any, r: any) => {
     if (isComparable(l)) return l.gt(r)
     if (isComparable(r)) return r.lt(l)
-    return toValue(l) > toValue(r)
+    return spotDraftCompare(toValue(l), toValue(r), '>')
   },
   '<': (l: any, r: any) => {
     if (isComparable(l)) return l.lt(r)
     if (isComparable(r)) return r.gt(l)
-    return toValue(l) < toValue(r)
+    return spotDraftCompare(toValue(l), toValue(r), '<')
   },
   '>=': (l: any, r: any) => {
     if (isComparable(l)) return l.geq(r)
     if (isComparable(r)) return r.leq(l)
-    return toValue(l) >= toValue(r)
+    return spotDraftCompare(toValue(l), toValue(r), '>=')
   },
   '<=': (l: any, r: any) => {
     if (isComparable(l)) return l.leq(r)
     if (isComparable(r)) return r.geq(l)
-    return toValue(l) <= toValue(r)
+    return spotDraftCompare(toValue(l), toValue(r), '<=')
   },
   'contains': (l: any, r: any) => {
     l = toValue(l)
@@ -48,15 +49,7 @@ export function equals (lhs: any, rhs: any): boolean {
   if (isComparable(rhs)) return rhs.equals(lhs)
   lhs = toValue(lhs)
   rhs = toValue(rhs)
-  if (isArray(lhs)) {
-    return isArray(rhs) && arrayEquals(lhs, rhs)
-  }
-  return lhs === rhs
-}
-
-function arrayEquals (lhs: any[], rhs: any[]): boolean {
-  if (lhs.length !== rhs.length) return false
-  return !lhs.some((value, i) => !equals(value, rhs[i]))
+  return spotDraftEquals(lhs, rhs)
 }
 
 export function arrayIncludes (arr: any[], item: any): boolean {

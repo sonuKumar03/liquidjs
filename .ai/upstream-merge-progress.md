@@ -10,9 +10,9 @@
 | DONE | Inventory fork-only API surface | Custom filters/operators, tags, dependency graph, validations, tokenizer/parser exports, and TypeScript declarations identified below |
 | DONE | Record legacy baseline health | Tests cannot start without dependencies (`mocha: command not found`); legacy lint reports 3,546 errors |
 | DONE | Establish upstream codebase on migration branch | Upstream ancestry recorded; source tree replaced with `upstream/master` while preserving fork history and migration docs |
-| IN_PROGRESS | Port typed computation and comparison behavior | Currency, duration, date, null/undefined/object arithmetic, precision, defaults, and CommonForm comparisons |
-| TODO | Port custom filters | `toCurrency`, `toDuration`, `sumArray`, `updateAttribute`, `updateTypeAttribute`, plus modified arithmetic filters |
-| TODO | Port custom tags | `parseAssign`, `assignVar`, and `computeColumn` |
+| DONE | Port typed computation and comparison behavior | CommonForm currency/duration/date arithmetic, null/object handling, precision, and custom comparisons ported to TypeScript |
+| DONE | Port custom filters | `toCurrency`, `toDuration`, `sumArray`, `updateAttribute`, `updateTypeAttribute`, and arithmetic overrides registered by default |
+| IN_PROGRESS | Port custom tags | `parseAssign`, `assignVar`, and `computeColumn` |
 | TODO | Port dependency/static-analysis APIs | Assignment extraction, dependency graph, affected/assigned variables, and cycle detection |
 | TODO | Port validations | JSON validation, use-before-assignment, and `computeColumn`/`$$answer` validation |
 | TODO | Preserve LSP-facing parser/tokenizer API | Verify whether upstream exports can replace the fork's `Tokenizer`, token kinds, parser access, lexical helpers, and evaluation helpers |
@@ -84,3 +84,4 @@
 - 2026-06-15: `npm test` could not run because `node_modules` is absent and `mocha` is unavailable.
 - 2026-06-15: `npm run lint` completed with 3,546 pre-existing errors in the legacy fork.
 - 2026-06-15: Recorded `upstream/master` as merge ancestry and adopted its TypeScript source tree as the migration baseline.
+- 2026-06-15: Typed computation/filter slice passes typecheck, focused lint, build, and all 1,557 upstream/fork tests currently present.
