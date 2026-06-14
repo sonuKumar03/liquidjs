@@ -9,8 +9,8 @@
 | DONE | Identify merge strategy | Migrate fork behavior onto upstream TypeScript architecture; do not resolve the 3.x-to-10.x rewrite by blindly choosing conflict sides |
 | DONE | Inventory fork-only API surface | Custom filters/operators, tags, dependency graph, validations, tokenizer/parser exports, and TypeScript declarations identified below |
 | DONE | Record legacy baseline health | Tests cannot start without dependencies (`mocha: command not found`); legacy lint reports 3,546 errors |
-| IN_PROGRESS | Establish upstream codebase on migration branch | Preserve the legacy fork in Git history while making upstream the implementation baseline |
-| TODO | Port typed computation and comparison behavior | Currency, duration, date, null/undefined/object arithmetic, precision, defaults, and CommonForm comparisons |
+| DONE | Establish upstream codebase on migration branch | Upstream ancestry recorded; source tree replaced with `upstream/master` while preserving fork history and migration docs |
+| IN_PROGRESS | Port typed computation and comparison behavior | Currency, duration, date, null/undefined/object arithmetic, precision, defaults, and CommonForm comparisons |
 | TODO | Port custom filters | `toCurrency`, `toDuration`, `sumArray`, `updateAttribute`, `updateTypeAttribute`, plus modified arithmetic filters |
 | TODO | Port custom tags | `parseAssign`, `assignVar`, and `computeColumn` |
 | TODO | Port dependency/static-analysis APIs | Assignment extraction, dependency graph, affected/assigned variables, and cycle detection |
@@ -83,3 +83,4 @@
 
 - 2026-06-15: `npm test` could not run because `node_modules` is absent and `mocha` is unavailable.
 - 2026-06-15: `npm run lint` completed with 3,546 pre-existing errors in the legacy fork.
+- 2026-06-15: Recorded `upstream/master` as merge ancestry and adopted its TypeScript source tree as the migration baseline.
