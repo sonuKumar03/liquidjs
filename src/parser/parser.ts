@@ -2,7 +2,7 @@ import { Limiter, toPromise, assert, isTagToken, isOutputToken, ParseError, toLi
 import { Tokenizer } from './tokenizer'
 import { ParseStream } from './parse-stream'
 import { TopLevelToken, OutputToken } from '../tokens'
-import { Template, Output, HTML, Value } from '../template'
+import { Template, Output, HTML, Value, PlaceholderTemplate } from '../template'
 import { LiquidCache } from '../cache'
 import { FS, Loader, LookupType } from '../fs'
 import { LiquidError, LiquidErrors } from '../util/error'
@@ -37,6 +37,32 @@ export class Parser {
     const tokens = tokenizer.readTopLevelTokens(this.liquid.options)
     return this.parseTokens(tokens)
   }
+  public parseResilient (html: string, filepath?: string): { templates: Template[], errors: ParseError[] } {
+    html = String(html)
+    this.parseLimit.use(html.length)
+    const tokenizer = new Tokenizer(html, this.liquid.options.operators, filepath)
+    const tokens = tokenizer.readTopLevelTokens(this.liquid.options)
+    
+    const templates: Template[] = []
+    const errors: ParseError[] = []
+    
+    let token
+    while ((token = tokens.shift())) {
+      const tokensBackup = [...tokens]
+      try {
+        templates.push(this.parseToken(token, tokens))
+      } catch (err) {
+        tokens.length = 0
+        tokens.push(...tokensBackup)
+        
+        const parseError = err instanceof ParseError ? err : new ParseError(err as Error, token)
+        errors.push(parseError)
+        templates.push(new PlaceholderTemplate(token, parseError))
+      }
+    }
+    return { templates, errors }
+  }
+
   public parseTokens (tokens: TopLevelToken[]) {
     let token
     const templates: Template[] = []

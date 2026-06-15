@@ -32,7 +32,10 @@ export interface PartialScope {
 
 export interface Template {
   token: Token;
+  begin: number;
+  end: number;
   render(ctx: Context, emitter: Emitter): any;
+
   children?(partials: boolean, sync: boolean): Generator<unknown, Template[]> ;
   arguments?(): Arguments;
   blockScope?(): Iterable<string>;

@@ -1,5 +1,11 @@
+import * as fs from 'fs'
+import * as path from 'path'
 import { Liquid } from '../liquid'
-import { checkAtleastOneDynamicTableAssignPresent, checkValidJSON, checkVariableAssignedBeforeUsed } from './validations'
+import { checkAtleastOneDynamicTableAssignPresent, checkValidJSON, checkVariableAssignedBeforeUsed, isValidPropertyPath } from './validations'
+import { PlaceholderTemplate } from '../template'
+import { Tokenizer } from '../parser'
+
+
 
 describe('SpotDraft validation compatibility', () => {
   const liquid = new Liquid()
@@ -142,4 +148,77 @@ describe('SpotDraft validation compatibility', () => {
     {% endcomputeColumn %}`
     expect(checkAtleastOneDynamicTableAssignPresent(liquid, answerAfterBlocks)).toEqual([])
   })
+
+  describe('Lexical Normalization & Resilient Parsing', () => {
+    function getExpressionTokens(template: any): any[] {
+      const token = template.token
+      const tokenizer = new Tokenizer(token.input, liquid.options.operators, token.file, token.contentRange)
+      return [...tokenizer.readExpressionTokens()]
+    }
+
+    it('splits decrements (a--) into identifier and operators', () => {
+      const templates = liquid.parser.parse('{{ a-- }}')
+      const tokens = getExpressionTokens(templates[0])
+      expect(tokens).toHaveLength(3)
+      expect(tokens[0].getText()).toBe('a')
+      expect(tokens[1].getText()).toBe('-')
+      expect(tokens[2].getText()).toBe('-')
+    })
+
+    it('splits binary operator sign (a -2) into identifier, operator, and number', () => {
+      const templates = liquid.parser.parse('{{ a -2 }}')
+      const tokens = getExpressionTokens(templates[0])
+      expect(tokens).toHaveLength(3)
+      expect(tokens[0].getText()).toBe('a')
+      expect(tokens[1].getText()).toBe('-')
+      expect(tokens[2].getText()).toBe('2')
+    })
+
+    it('does not split negative number at start (-2)', () => {
+      const templates = liquid.parser.parse('{{ -2 }}')
+      const tokens = getExpressionTokens(templates[0])
+      expect(tokens).toHaveLength(1)
+      expect(tokens[0].getText()).toBe('-2')
+    })
+
+    it('validates property paths using isValidPropertyPath', () => {
+      expect(isValidPropertyPath('a.b.c')).toBe(true)
+      expect(isValidPropertyPath('a')).toBe(true)
+      expect(isValidPropertyPath('a and b')).toBe(false)
+      expect(isValidPropertyPath('a | plus: 2')).toBe(false)
+      expect(isValidPropertyPath('123')).toBe(false)
+    })
+
+    it('parses resiliently without throwing on syntax errors', () => {
+      const { templates, errors } = liquid.parser.parseResilient('{% assign a = %} {% assign b = 2 %}')
+      expect(templates).toHaveLength(3) // Placeholder, HTML (space), AssignTag
+      expect(templates[0]).toBeInstanceOf(PlaceholderTemplate)
+      expect(errors).toHaveLength(1)
+      expect(errors[0].message).toContain('expression')
+    })
+
+    it('exposes begin and end offsets on templates', () => {
+      const templates = liquid.parser.parse('  {% assign a = 1 %}  ')
+      expect(templates[0].begin).toBe(0) // HTML space
+      expect(templates[1].begin).toBe(2) // Assign
+      expect(templates[1].end).toBe(20)
+    })
+
+    it('passes validation on test.liquid', () => {
+      const testContent = fs.readFileSync(path.join(__dirname, '../../test.liquid'), 'utf8')
+      const jsonErrors = checkValidJSON(liquid, testContent)
+      const varErrors = checkVariableAssignedBeforeUsed(liquid, testContent)
+      expect(jsonErrors).toEqual([])
+      expect(Array.isArray(varErrors)).toBe(true)
+    })
+
+    it('passes validation on test2.liquid', () => {
+      const testContent = fs.readFileSync(path.join(__dirname, '../../test2.liquid'), 'utf8')
+      const jsonErrors = checkValidJSON(liquid, testContent)
+      const varErrors = checkVariableAssignedBeforeUsed(liquid, testContent)
+      expect(jsonErrors).toEqual([])
+      expect(Array.isArray(varErrors)).toBe(true)
+    })
+  })
 })
+

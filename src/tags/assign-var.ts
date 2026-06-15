@@ -5,9 +5,10 @@ import { Liquid } from '../liquid'
 import { Tag } from '../template/tag'
 
 export default class AssignVarTag extends Tag {
-  private readonly identifier: IdentifierToken
-  private readonly key: string
-  private readonly value: Value
+  public readonly identifier: IdentifierToken
+  public readonly key: string
+  public readonly value: Value
+
 
   constructor (token: TagToken, remainTokens: TopLevelToken[], liquid: Liquid) {
     super(token, remainTokens, liquid)

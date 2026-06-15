@@ -1,13 +1,14 @@
 import { Arguments, Value } from '../template'
 import { Context } from '../context'
-import { IdentifierToken, TagToken, TopLevelToken } from '../tokens'
+import { IdentifierToken, TagToken, TopLevelToken, FilteredValueToken } from '../tokens'
 import { Liquid } from '../liquid'
 import { Tag } from '../template/tag'
 
 export default class ParseAssignTag extends Tag {
-  private readonly identifier: IdentifierToken
-  private readonly key: string
-  private readonly value: Value
+  public readonly identifier: IdentifierToken
+  public readonly key: string
+  public readonly value: Value
+  public readonly valueToken: FilteredValueToken
 
   constructor (token: TagToken, remainTokens: TopLevelToken[], liquid: Liquid) {
     super(token, remainTokens, liquid)
@@ -17,8 +18,11 @@ export default class ParseAssignTag extends Tag {
     this.tokenizer.skipBlank()
     this.tokenizer.assert(this.tokenizer.peek() === '=', 'expected "="')
     this.tokenizer.advance()
-    this.value = new Value(this.tokenizer.readFilteredValue(), liquid)
+    const valueToken = this.tokenizer.readFilteredValue()
+    this.valueToken = valueToken
+    this.value = new Value(valueToken, liquid)
   }
+
 
   * render (ctx: Context): Generator<unknown, void, unknown> {
     const value = yield this.value.value(ctx)

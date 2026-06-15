@@ -1,6 +1,21 @@
 import { Liquid } from '../liquid'
 import { Template } from '../template'
+import { Tokenizer, PropertyAccessToken, ParseAssignTag, ComputeColumnTag } from '../index'
 import { getAssignmentParts, getTagToken, getTemplateChildren, getTemplates, parseAssign } from './dependency-graph'
+
+export function isValidPropertyPath (expr: string): boolean {
+  try {
+    const tokenizer = new Tokenizer(expr)
+    tokenizer.skipBlank()
+    const value = tokenizer.readValue()
+    if (!value) return false
+    tokenizer.skipBlank()
+    return tokenizer.end() && value instanceof PropertyAccessToken
+  } catch (_) {
+    return false
+  }
+}
+
 
 export interface JsonValidationError {
   expression: string;
@@ -19,22 +34,39 @@ function isLiteral (value: string): boolean {
 
 export function checkValidJSON (engine: Liquid, expression: string): JsonValidationError[] {
   const errors: JsonValidationError[] = []
-  const tagPattern = /{%-?\s*parseAssign\s+([A-Za-z_$][\w$]*)\s*=\s*([\s\S]*?)-?%}/g
-  for (const match of expression.matchAll(tagPattern)) {
-    const [, defined, capturedValue] = match
-    const rhs = capturedValue.trim()
-    try {
-      if (!isLiteral(rhs)) throw new Error('Invalid value assigned to parseAssign statement')
-      const value = engine.evalValueSync(rhs, {})
-      JSON.parse(`{"value": ${typeof value === 'string' ? JSON.stringify(value) : String(value)}}`)
-    } catch (error) {
-      const line = expression.slice(0, match.index).split('\n').length
-      errors.push({
-        expression: `parseAssign ${defined} =  ${rhs}`,
-        errorMessage: `${(error as Error).message} at line ${line}`
-      })
+  
+  function visit (templates: Template[]) {
+    for (const template of templates) {
+      const token = getTagToken(template)
+      if (!token) continue
+      if (token.name === 'parseAssign') {
+        const equalsPos = token.args.indexOf('=')
+        const defined = equalsPos >= 0 ? token.args.slice(0, equalsPos).trim() : ''
+        const rhs = equalsPos >= 0 ? token.args.slice(equalsPos + 1).trim() : ''
+
+
+
+        try {
+          if (!isLiteral(rhs)) throw new Error('Invalid value assigned to parseAssign statement')
+          const value = engine.evalValueSync(rhs, {})
+          JSON.parse(`{"value": ${typeof value === 'string' ? JSON.stringify(value) : String(value)}}`)
+        } catch (error) {
+          const line = token.line
+          errors.push({
+            expression: `parseAssign ${defined} =  ${rhs}`,
+            errorMessage: `${(error as Error).message} at line ${line}`
+          })
+        }
+      } else {
+        visit(getTemplateChildren(template))
+      }
     }
   }
+
+  try {
+    const templates = engine.parser.parseResilient(expression).templates
+    visit(templates)
+  } catch (e) {}
   return errors
 }
 
@@ -83,15 +115,22 @@ export function checkAtleastOneDynamicTableAssignPresent (engine: Liquid, expres
           return childToken?.name === 'assign' && getAssignmentParts(child)?.defined === '$$answer'
         })
         if (!hasAnswer) {
-          const [tableName, columnName] = token.args.trim().split(/\s+/)
           errors.push({
             message: '$$answer is not assigned outside any loops or condition block',
-            metadata: { tableName, columnName }
+            metadata: {
+              tableName: (template as any).table.content,
+              columnName: (template as any).column.content
+            }
           })
         }
-      } else if (['if', 'unless', 'for'].includes(token.name)) visit(getTemplateChildren(template))
+      } else if (['if', 'unless', 'for'].includes(token.name)) {
+        visit(getTemplateChildren(template))
+      }
     }
   }
-  visit(getTemplates(expression, engine))
+  try {
+    const templates = engine.parser.parseResilient(expression).templates
+    visit(templates)
+  } catch (_) {}
   return errors
 }

@@ -6,6 +6,8 @@ import { NormalizedFullOptions, defaultOptions } from '../liquid-options'
 import { FilterArg } from './filter-arg'
 import { whiteSpaceCtrl } from './whitespace-ctrl'
 import { isPropertyAccessToken, isRangeToken, isTagToken, isOutputToken } from '../util/type-guards'
+import { TokenKind } from './token-kind'
+
 
 export class Tokenizer {
   p: number
@@ -39,19 +41,21 @@ export class Tokenizer {
   }
 
   * readExpressionTokens (): IterableIterator<Token> {
+    const tokens: Token[] = []
     while (this.p < this.N) {
       const operator = this.readOperator()
       if (operator) {
-        yield operator
+        tokens.push(operator)
         continue
       }
       const operand = this.readValue()
       if (operand) {
-        yield operand
+        tokens.push(operand)
         continue
       }
-      return
+      break
     }
+    yield * normalizeTokens(tokens, this.input, this.file)
   }
   readOperator (): OperatorToken | undefined {
     this.skipBlank()
@@ -577,5 +581,67 @@ export function getTokenAtPosition (
     }
   }
   return undefined
+}
+
+function normalizeTokens (tokens: Token[], input: string, file?: string): Token[] {
+  const normalized: Token[] = []
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    const text = token.getText()
+
+    // 1. Decrement Splitting (a--)
+    if (text.endsWith('--') && (token.kind === TokenKind.Word || token.kind === TokenKind.PropertyAccess)) {
+      if (token instanceof IdentifierToken) {
+        const valToken = new IdentifierToken(input, token.begin, token.end - 2, file)
+        const op1 = new OperatorToken(input, token.end - 2, token.end - 1, file)
+        const op2 = new OperatorToken(input, token.end - 1, token.end, file)
+        normalized.push(valToken, op1, op2)
+        continue
+      } else if (token instanceof PropertyAccessToken) {
+        const lastProp = token.props[token.props.length - 1]
+        if (lastProp && lastProp.getText().endsWith('--')) {
+          let newLastProp: ValueToken | IdentifierToken
+          if (lastProp instanceof IdentifierToken) {
+            newLastProp = new IdentifierToken(input, lastProp.begin, lastProp.end - 2, file)
+          } else {
+            newLastProp = lastProp
+          }
+          const newProps = [...token.props.slice(0, -1), newLastProp]
+          const valToken = new PropertyAccessToken(token.variable, newProps, input, token.begin, token.end - 2, file)
+          const op1 = new OperatorToken(input, token.end - 2, token.end - 1, file)
+          const op2 = new OperatorToken(input, token.end - 1, token.end, file)
+          normalized.push(valToken, op1, op2)
+          continue
+        }
+      }
+    }
+
+    // 2. Unary/Binary Operator Separation (a | +2 or a -2)
+    if ((text.startsWith('+') || text.startsWith('-')) && (token.kind === TokenKind.Number || token.kind === TokenKind.PropertyAccess)) {
+      const prev = normalized[normalized.length - 1]
+      const isPrecededByValue = prev && (
+        prev.kind === TokenKind.Number ||
+        prev.kind === TokenKind.Literal ||
+        prev.kind === TokenKind.PropertyAccess ||
+        prev.kind === TokenKind.Word ||
+        prev.kind === TokenKind.Quoted ||
+        prev.kind === TokenKind.Range
+      )
+      if (isPrecededByValue) {
+        const op = new OperatorToken(input, token.begin, token.begin + 1, file)
+        let remainder: Token
+        if (token.kind === TokenKind.Number) {
+          remainder = new NumberToken(input, token.begin + 1, token.end, file)
+        } else {
+          remainder = new IdentifierToken(input, token.begin + 1, token.end, file)
+        }
+        normalized.push(op, remainder)
+        continue
+      }
+    }
+
+    normalized.push(token)
+  }
+  return normalized
 }
 

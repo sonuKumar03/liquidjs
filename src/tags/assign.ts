@@ -3,9 +3,10 @@ import { Arguments } from '../template'
 import { IdentifierToken } from '../tokens'
 
 export default class extends Tag {
-  private key: string
-  private value: Value
-  private identifier: IdentifierToken
+  public key: string
+  public value: Value
+  public identifier: IdentifierToken
+
 
   constructor (token: TagToken, remainTokens: TopLevelToken[], liquid: Liquid) {
     super(token, remainTokens, liquid)

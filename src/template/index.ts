@@ -9,3 +9,5 @@ export * from './value'
 export * from './output'
 export * from './html'
 export * from './analysis'
+export * from './placeholder-template'
+

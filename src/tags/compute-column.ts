@@ -6,9 +6,10 @@ import { IdentifierToken, TagToken, TopLevelToken } from '../tokens'
 import { isTagToken } from '../util'
 
 export default class ComputeColumnTag extends Tag {
-  private readonly table: IdentifierToken
-  private readonly column: IdentifierToken
-  private readonly templates: Template[] = []
+  public readonly table: IdentifierToken
+  public readonly column: IdentifierToken
+  public readonly templates: Template[] = []
+
 
   constructor (token: TagToken, remainTokens: TopLevelToken[], liquid: Liquid, parser: Parser) {
     super(token, remainTokens, liquid)

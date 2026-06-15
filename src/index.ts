@@ -8,7 +8,7 @@ export type { Comparable } from './drop'
 export { Emitter } from './emitters'
 export { defaultOperators, Operators, evalToken, evalQuotedToken, Expression, isFalsy, isTruthy } from './render'
 export { Context, Scope } from './context'
-export { Value, Hash, Template, FilterImplOptions, Tag, Filter, Output, Variable, VariableLocation, VariableSegments, Variables, StaticAnalysis, StaticAnalysisOptions, analyze, analyzeSync, Arguments, PartialScope } from './template'
+export { Value, Hash, Template, FilterImplOptions, Tag, Filter, Output, Variable, VariableLocation, VariableSegments, Variables, StaticAnalysis, StaticAnalysisOptions, analyze, analyzeSync, Arguments, PartialScope, PlaceholderTemplate } from './template'
 export type { TagRenderReturn } from './template'
 export {
   Token, TopLevelToken, TagToken, ValueToken, HTMLToken, NumberToken,
